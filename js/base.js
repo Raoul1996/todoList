@@ -37,6 +37,8 @@
     $form_add_task.on('submit', on_add_task_from_submit);
     $task_detail_mask.on('click', hide_task_detail);
     function on_add_task_from_submit(e) {
+        //TODO:DEBUG
+        $("button[name=clear]").hide();
         var $input;
         /**
          * 原来的new_task对象声明在了顶层作用域上，
@@ -56,6 +58,7 @@
         if(add_task()){
             $input.val(null);
         }
+
 
     }
     function listen_task_detail() {
@@ -98,7 +101,7 @@
         task_list[index] = data;
         refresh_task_list();
     }
-    function hide_task_detail(index) {
+    function hide_task_detail() {
         $task_detail.hide();
         $task_detail_mask.hide();
     }
@@ -127,6 +130,7 @@
         store.set('task_list', task_list);
         console.log('task_list:'+task_list);
         render_task_list();
+
 
     }
     //删除一条task
@@ -186,8 +190,8 @@
         //使用新模板代替旧模板
         $task_detail.html(task_detail_tpl);
         $update_form = $task_detail.find('form');
-        $task_detail_content =$task_detail.find('[class=content]')
-        $task_detail_content_input =$task_detail.find('[name=content]')
+        $task_detail_content =$task_detail.find('[class=content]');
+        $task_detail_content_input =$task_detail.find('[name=content]');
         //双击更改task——detail的标题
         $task_detail_content.on('dblclick',function () {
             $task_detail_content.hide();
