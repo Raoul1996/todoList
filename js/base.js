@@ -20,7 +20,8 @@
     });
 
     /*====DEBUG=======*/
-    $form_add_task.children("button").on('click', function (e) {
+    $form_add_task.children("button").on('click', on_add_task_from_submit);
+    function on_add_task_from_submit(e) {
         var $input;
         /**
          * 原来的new_task对象声明在了顶层作用域上，
@@ -41,7 +42,7 @@
             $input.val(null);
         }
 
-    });
+    }
     //查找并监听所有删除按钮的点击事件
     function listen_task_delete() {
         $delete_task.on("click",function () {
