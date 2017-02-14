@@ -1,5 +1,4 @@
 *{
-    /*background: rgba(0,0,0,.1);*/
     box-sizing: border-box;
     transition: background 100ms;
     outline: 0;
@@ -16,7 +15,7 @@ ul,li,ol{
 .fr{
     float: right;
 }
-input,.task-item,button,.task-detail-mask,textarea{
+input,.task-item,button,.task-detail-mask,textarea,.task-detail {
     padding: 10px;
     border-radius:3px;
 }
@@ -39,23 +38,25 @@ h1{
 .task-list{
     margin: 3px 0;
 }
-textarea,button,input[type=text],input[type=date]{
+textarea,button,input[type=text],input[type=date],.task-detail input{
     border: 0;
 }
 
-textarea,input[type=text],input[type=date]{
+textarea,input[type=text],input[type=date],.task-detail input{
     display: block;
     width: 100%;
     background-color: #dddddd;
     box-shadow:inset 0 1px 1px rgba(0,0,0,.3);
 }
+
 textarea{
     min-height: 100px;
     resize: none;
 }
 textarea:hover,textarea:focus,
 input[type=text]:hover,input[type=date]:hover,
-input[type=text]:focus,input[type=date]:focus{
+input[type=text]:focus,input[type=date]:focus,
+.task-detail input:hover,.task-detail input:focus{
     background-color: #eeeeee;
     box-shadow:inset 0 1px 1px rgba(0,0,0,.2);
 
@@ -65,20 +66,23 @@ button{
     cursor: pointer;
     color: #333;
 }
-.add-task input[type=text]{
+.add-task input[type=text],.task-detail input[type=text]{
     float: left;
     width: 84%;
     margin-right: 1%;
 }
+[type=submit]{
+    background-color: #5fb9e4;
+}
 .add-task button[type=submit]{
     float: left;
     width: 15%;
-    background-color: #5fb9e4;
+
 }
 .add-task button[type=submit]:hover{
     background-color: #46b1e4;
 }
-.add-task button[type=submit] .task-item{
+.add-task button[type=submit]{
     box-shadow: 0 2px 3px rgba(0,0,0,.4);
 }
 .task-item{
@@ -97,23 +101,29 @@ button{
     position: absolute;
 }
 .task-detail{
+    position: absolute;
+    top: 50px;
     background-color: #ffffff;
     color: #333;
+    height: 260px;
     width: 50%;
-    height: 100%;
+    /*height: 100%;*/
     padding: 10px;
     bottom: 0;
     right: 0;
+    border-radius: 3px 0 0 3px;
+    box-shadow: 0 1px 2px 1px rgba(0,0,0,.1);
 }
 .task-detail .content{
     padding: 10px;
     font-weight: 900;
     cursor: pointer;
 }
-.task-detail > *{
+.task-detail .input-item{
     margin-bottom: 10px;
 }
 .task-detail-mask{
+    position: fixed;
     top:0;
     bottom: 0;
     right: 0;

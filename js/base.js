@@ -9,6 +9,8 @@
         , task_list = []
         ,current_index
         ,$update_form
+        ,$task_detail_content
+        ,$task_detail_content_input
         ;
     //initial the page.
     init();
@@ -70,17 +72,30 @@
         current_index=index;
         $task_detail.show();
         $task_detail_mask.show();
-        $update_form = $task_detail.find('form');
-        console.log($update_form);
+
+        // console.log($update_form);
         $update_form.on("submit",function (e) {
             e.preventDefault();
-            console.log("1");
+            var data ={};
+            data.content = $(this).find('[name=content]').val();
+            data.desc = $(this).find('[name=desc]').val();
+            data.remind_date = $(this).find('[name=remind_date]').val();
+            update_task(index,data);
+            $task_detail.hide();
+            $task_detail_mask.hide();
+            // console.log(data);
+            // console.log(index);
+            // console.log(task_list);
         })
     }
 
     function update_task(index,data) {
-        if(index===undefined||task_list[index]) return;
-        task_list[index] = $.merge({},task_list[index],data);
+        // console.dir(data);
+        // console.log(index === undefined||!task_list[index]);
+        if(index===undefined||!task_list[index]) return;
+        // task_list[index] = $.merge({},task_list[index],data);
+        // console.log(index+'-'+data);
+        task_list[index] = data;
         refresh_task_list();
     }
     function hide_task_detail(index) {
@@ -110,6 +125,7 @@
     //刷新localStorage并更新模板
     function refresh_task_list() {
         store.set('task_list', task_list);
+        console.log('task_list:'+task_list);
         render_task_list();
 
     }
@@ -126,7 +142,7 @@
         $task_list.html('');
         for (var i=0;i<task_list.length;i++){
             var $task = render_task_item(task_list[i],i);
-            $task_list.append($task);
+            $task_list.prepend($task);
         }
         /**
          *jQuery不会自动更新文档流，
@@ -144,25 +160,39 @@
         if (index === undefined || !task_list[index])return;
         var item =task_list[index];
         var task_detail_tpl=
-            '<form>'+
+            '<form class="forms">'+
             '<div class="content">' +
-                item.content+
-            '</div>' +
-            '<div>' +
-            '<div class="desc">' +
-            '<textarea name="desc" id="" value="' +
-            item.desc+
-            '"></textarea>' +
-            '</div>' +
-            '</div>' +
-            '<div class="remind">' +
-            '<input type="date"/>' +
+            item.content +
             '</div>'+
-            '<div><button type="submit">Update</button></div>'+
+            '<input style="display:none;" name="content" class="content" value="' +
+            item.content+
+            '"/>' +
+            '<div>' +
+            '<div class="desc input-item">' +
+            '<textarea name="desc" id="">'+
+            (item.desc||'')+
+            '</textarea>' +
+            '</div>' +
+            '</div>' +
+            '<div class="remind input-item">' +
+            '<input type="date" name="remind_date" value="' +
+            item.remind_date +
+            '" />' +
+            '</div>'+
+            '<div class="input-item"><button type="submit" class="fr">Update</button></div>'+
             '</form>';
+        //清空旧模板
         $task_detail.html("");
+        //使用新模板代替旧模板
         $task_detail.html(task_detail_tpl);
-
+        $update_form = $task_detail.find('form');
+        $task_detail_content =$task_detail.find('[class=content]')
+        $task_detail_content_input =$task_detail.find('[name=content]')
+        //双击更改task——detail的标题
+        $task_detail_content.on('dblclick',function () {
+            $task_detail_content.hide();
+            $task_detail_content_input.show();
+        });
     }
     function render_task_item(data,index) {
         if (!data||index==undefined) return;
