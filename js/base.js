@@ -3,18 +3,19 @@
 
     var $form_add_task = $(".add-task")
         ,$task_delete_trigger
+        ,$task_detail_mask=$(".task-detail-mask")
         ,$task_detail = $(".task-detail")
         ,$task_detail_trigger
         , task_list = []
-        ,task_detail=[]
-        ,$task_detail_mask=$(".task-detail-mask")
+        ,current_index
+        ,$update_form
         ;
     //initial the page.
     init();
     //俺也不知道为啥使用submit不行，所以就用button的click事件代替了，这大概就是命吧
     //俺发誓俺什么都没改，就是按昨天晚上第一次写的，现在居然可以用了。这个是玄学。。
     //事实证明，乖乖的用click事件还是可以的。。。submit不行。。。
-
+    /*问题找到了。因为submit事件只是表单元素才有的事件，也就是只有在form里边才可以使用submit事件*/
     /*=====DEBUG========*/
     $("button[name=clear]").on("click",function () {
         store.clear();
@@ -31,7 +32,7 @@
 
     }
 
-    $form_add_task.children("button").on('click', on_add_task_from_submit);
+    $form_add_task.on('submit', on_add_task_from_submit);
     $task_detail_mask.on('click', hide_task_detail);
     function on_add_task_from_submit(e) {
         var $input;
@@ -63,10 +64,24 @@
            show_task_detail(index);
         })
     }
+    //查看task_detail
     function show_task_detail(index) {
         render_task_detail(index);
+        current_index=index;
         $task_detail.show();
         $task_detail_mask.show();
+        $update_form = $task_detail.find('form');
+        console.log($update_form);
+        $update_form.on("submit",function (e) {
+            e.preventDefault();
+            console.log("1");
+        })
+    }
+
+    function update_task(index,data) {
+        if(index===undefined||task_list[index]) return;
+        task_list[index] = $.merge({},task_list[index],data);
+        refresh_task_list();
     }
     function hide_task_detail(index) {
         $task_detail.hide();
@@ -129,19 +144,22 @@
         if (index === undefined || !task_list[index])return;
         var item =task_list[index];
         var task_detail_tpl=
+            '<form>'+
             '<div class="content">' +
                 item.content+
             '</div>' +
             '<div>' +
             '<div class="desc">' +
-            '<textarea name="" id="" value="' +
+            '<textarea name="desc" id="" value="' +
             item.desc+
             '"></textarea>' +
             '</div>' +
             '</div>' +
             '<div class="remind">' +
             '<input type="date"/>' +
-            '</div>';
+            '</div>'+
+            '<div><button type="submit">Update</button></div>'+
+            '</form>';
         $task_detail.html("");
         $task_detail.html(task_detail_tpl);
 
