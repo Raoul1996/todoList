@@ -11,9 +11,19 @@
         ,$update_form
         ,$task_detail_content
         ,$task_detail_content_input
-        ;
+        ,$checkbox_complete
+        ,$msg =$(".msg")
+        ,$msg_content =$msg.find(".msg-content")
+        ,$msg_confirm =$msg.find(".confirmed")
+        ,complete_items=[]
+        ,$alerter = $(".alerter")
+    ;
     //initial the page.
     init();
+//禁用右键菜单。
+//     $(document).bind("contextmenu",function(e){
+//         return false;
+//     });
     //俺也不知道为啥使用submit不行，所以就用button的click事件代替了，这大概就是命吧
     //俺发誓俺什么都没改，就是按昨天晚上第一次写的，现在居然可以用了。这个是玄学。。
     //事实证明，乖乖的用click事件还是可以的。。。submit不行。。。
@@ -24,18 +34,31 @@
         $('.task-list').html('');
         location.reload();
         console.log("clear the localStorange");
+        //TODO:DEBUG
+        $("button[name=clear]").hide();
     });
 
     /*====DEBUG=======*/
     function init() {
         task_list=store.get('task_list')||[];
-        if (task_list.length)
-            render_task_list();
-
+        if (task_list.length) render_task_list();
+        task_remind_check();
+        console.log("initial successful");
+        listen_msg_event();
     }
+
 
     $form_add_task.on('submit', on_add_task_from_submit);
     $task_detail_mask.on('click', hide_task_detail);
+
+    
+    function listen_msg_event() {
+        $msg_confirm.on('click',function () {
+            hide_msg();
+        })
+    }
+    
+    
     function on_add_task_from_submit(e) {
         //TODO:DEBUG
         $("button[name=clear]").hide();
@@ -62,12 +85,57 @@
 
     }
     function listen_task_detail() {
+        var index;
+        var task_item=$('.task-item');
+        task_item.on('dblclick',function () {
+            index=$(this).data('index');
+            show_task_detail(index);
+        });
+        task_item.mousedown(function(e){
+            e.preventDefault();
+            var $this = $(this);
+            // var is_complete =$this.is(":checked");
+            var index = $this.data('index');
+            var item = get(index);
+            if(3 == e.which){
+                e.preventDefault();
+                if (item.complete){
+                    update_task(index,{complete:false});
+                    // $this.prop('checked',true)
+                }
+                else{
+                    update_task(index,{complete:true});
+                    // $this.prop('checked',false);
+                }
+
+            }
+        });
         $task_detail_trigger.on("click",function () {
             var $this = $(this);
             var  $item = $this.parent().parent();
-            var index = $item.data('index');
+            index = $item.data('index');
            show_task_detail(index);
         })
+    }
+    
+    function listen_checkbox_compete() {
+        $checkbox_complete.on('click',function () {
+            var $this = $(this);
+            // var is_complete =$this.is(":checked");
+            var index = $this.parent().parent().data('index');
+            var item = get(index);
+            if (item.complete){
+                update_task(index,{complete:false});
+                // $this.prop('checked',true)
+            }
+            else{
+                update_task(index,{complete:true});
+                // $this.prop('checked',false);
+            }
+        })
+    }
+    function get(index) {
+        return store.get('task_list')[index];
     }
     //查看task_detail
     function show_task_detail(index) {
@@ -93,12 +161,9 @@
     }
 
     function update_task(index,data) {
-        // console.dir(data);
-        // console.log(index === undefined||!task_list[index]);
         if(index===undefined||!task_list[index]) return;
-        // task_list[index] = $.merge({},task_list[index],data);
-        // console.log(index+'-'+data);
-        task_list[index] = data;
+        task_list[index] = $.extend({},task_list[index],data);
+
         refresh_task_list();
     }
     function hide_task_detail() {
@@ -128,7 +193,6 @@
     //刷新localStorage并更新模板
     function refresh_task_list() {
         store.set('task_list', task_list);
-        console.log('task_list:'+task_list);
         render_task_list();
 
 
@@ -140,14 +204,58 @@
         delete task_list[index];
         refresh_task_list();
     }
+    function task_remind_check() {
+        var current_timestap;
+        var itl = setInterval(function () {
+            for (var i=0;i<task_list.length;i++){
+                var item =get(i),task_timestap;
+                // console.log(item);
+                if(!item||!item.remind_date||item.informed) continue;
+                current_timestap =(new Date()).getTime();
+                task_timestap = (new Date(item.remind_date)).getTime();
+                // console.log('current_timestap'+':'+current_timestap);
+                // console.log('task_timestap'+':'+task_timestap);
+                if (current_timestap - task_timestap>=1){
+                    update_task(i,{informed:true});
+                    show_msg(item.content);
+                }
+            }
+        },500);
 
+    }
+    function show_msg(msg) {
+        $msg_content.html(msg);
+        $alerter.get(0).play();
+        $msg.show();
+    }
+    function hide_msg(msg) {
+        $msg_content.html(msg);
+        $msg.hide();
+    }
     function render_task_list() {
         var $task_list=$('.task-list');
         $task_list.html('');
         for (var i=0;i<task_list.length;i++){
-            var $task = render_task_item(task_list[i],i);
-            $task_list.prepend($task);
+            var item =task_list[i];
+            if (item && item.complete)
+                complete_items[i]=item;
+            else{
+                var $task = render_task_item(item, i);
+                $task_list.prepend($task);
+            }
+
         }
+        for (var j=0;j<complete_items.length;j++){
+            $task =render_task_item(complete_items[j],j);
+            if (!$task) continue;
+            console.log("item"+item);
+            console.log("complete_items"+j+":"+complete_items[j]);
+            $task_list.append($task);
+            $task.addClass('completed');
+
+        }
+        complete_items.length=0;
+
         /**
          *jQuery不会自动更新文档流，
          * 所以在生成条目的时候，
@@ -155,8 +263,11 @@
          */
         $task_delete_trigger=$(".action.delete");
         $task_detail_trigger=$(".action.detail");
+        $checkbox_complete = $('.task-list .complete[type=checkbox]');
         listen_task_delete();
         listen_task_detail();
+        listen_checkbox_compete();
+
         
     }
     //渲染指定task——detail
@@ -179,8 +290,9 @@
             '</div>' +
             '</div>' +
             '<div class="remind input-item">' +
-            '<input type="date" name="remind_date" value="' +
-            item.remind_date +
+            '<label for="">提醒时间</label>' +
+            '<input class="datetime" type="text" name="remind_date" value="' +
+            (item.remind_date || '') +
             '" />' +
             '</div>'+
             '<div class="input-item"><button type="submit" class="fr">Update</button></div>'+
@@ -189,6 +301,7 @@
         $task_detail.html("");
         //使用新模板代替旧模板
         $task_detail.html(task_detail_tpl);
+        $(".datetime").datetimepicker();
         $update_form = $task_detail.find('form');
         $task_detail_content =$task_detail.find('[class=content]');
         $task_detail_content_input =$task_detail.find('[name=content]');
@@ -197,12 +310,15 @@
             $task_detail_content.hide();
             $task_detail_content_input.show();
         });
+
     }
     function render_task_item(data,index) {
         if (!data||index==undefined) return;
         var list_item_tpl=
             '<li class="task-item" data-index="' + index+'">'+
-            '<span><input type="checkbox"></span>'+
+            '<span><input class="complete" type="checkbox" ' +
+            (data.complete? 'checked':'')+
+            ' ></span>'+
             '<span class="text-content">'+data.content+'</span>'+
             '<span class="fr">'+
             '<span class="action delete"> delete</span>'+
