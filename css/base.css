@@ -28,7 +28,7 @@ input,.task-item,button,.task-detail-mask,textarea,.task-detail {
     height:0;}
 .clearfix{*zoom:1;}
 body{
-    background-color:black;
+    background-color:rgba(0, 25, 49, 0.9);
     background-image:
             radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px),
             radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 30px),
@@ -49,7 +49,9 @@ body{
     margin: 1em auto;
 }
 h1{
+    font-size: 2.5em;
     text-align: center;
+    margin: 50px auto;
 }
 .task-list{
     margin: 3px 0;
@@ -87,8 +89,15 @@ button{
     width: 84%;
     margin-right: 1%;
 }
+button.primary,
 [type=submit]{
     background-color: #5fb9e4;
+}
+button.cancel{
+    background-color: #ff4c38;
+}
+.cancel,.primary{
+    color: #ffffff;
 }
 .add-task button[type=submit]{
     float: left;

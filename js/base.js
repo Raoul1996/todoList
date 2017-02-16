@@ -2,6 +2,8 @@
     'use strict';
 
     var $form_add_task = $(".add-task")
+        ,$window = $(window)
+        ,$body = $("body")
         ,$task_delete_trigger
         ,$task_detail_mask=$(".task-detail-mask")
         ,$task_detail = $(".task-detail")
@@ -20,25 +22,13 @@
     ;
     //initial the page.
     init();
-//禁用右键菜单。
-//     $(document).bind("contextmenu",function(e){
-//         return false;
-//     });
-    //俺也不知道为啥使用submit不行，所以就用button的click事件代替了，这大概就是命吧
-    //俺发誓俺什么都没改，就是按昨天晚上第一次写的，现在居然可以用了。这个是玄学。。
-    //事实证明，乖乖的用click事件还是可以的。。。submit不行。。。
-    /*问题找到了。因为submit事件只是表单元素才有的事件，也就是只有在form里边才可以使用submit事件*/
-    /*=====DEBUG========*/
-    $("button[name=clear]").on("click",function () {
-        store.clear();
-        $('.task-list').html('');
-        location.reload();
-        console.log("clear the localStorange");
-        //TODO:DEBUG
-        $("button[name=clear]").hide();
+
+
+    $(document).bind("contextmenu",function(){
+        return false;
     });
 
-    /*====DEBUG=======*/
+    /*问题找到了。因为submit事件只是表单元素才有的事件，也就是只有在form里边才可以使用submit事件*/
     function init() {
         task_list=store.get('task_list')||[];
         if (task_list.length) render_task_list();
@@ -46,10 +36,124 @@
         console.log("initial successful");
         listen_msg_event();
     }
+    function pop(arg) {
+        if(!arg)
+            console.error('pop title is requied!');
+        var conf={}
+            ,$box
+            ,$mask
+            ,$title
+            ,$content
+            ,$confirm
+            ,$cancel
+            ,timer
+            ,dfd
+            ,confirmed
+            ;
+        dfd = $.Deferred();
+        if (typeof arg =='string')
+            conf.title =arg;
+        else{
+            conf = $.extend(conf,arg);
+        }
+        $box =$('<div>' +
+            '<div class="pop_title">' +
+            conf.title +
+            '</div>' +
+            '<div class="pop_content">' +
+            '<div>' +
+            '<button style="margin-right: 15px;"  class="primary confirm">Enter</button>' +
+            '<button class="cancel confirm">Cancel</button>' +
+            '</div>' +
+            '</div>' +
+            '</div>')
+            .css({
+                color:'#333',
+                width:300,
+                height:'auto',
+                padding:10,
+                background:'#fff',
+                position:'fixed',
+                'border-radius':3,
+                'box-shandow':'0 1px 2px rgba(0,0,0,.5)'
+            });
+        $box.find('.pop_title').css({
+            padding:'5px 10px',
+            'font-wight':900,
+            'font-size':20,
+            'text-align':'center'
+        });
+        $content= $box.find('.pop_content').css({
+            padding:'5px 10px',
+            'text-align':'center'
+        });
+        $confirm=$content.find('button.confirm');
+
+        $cancel=$content.find('button.cancel');
+        $mask =$('<div class="test"></div>')
+            .css({
+                position:'fixed',
+                top:0,
+                bottom:0,
+                left:0,
+                right:0,
+                background:'rgba(0,0,0,.5)'
+            });
+
+        timer = setInterval(function () {
+            if (confirmed!==undefined){
+                dfd.resolve(confirmed);
+                clearInterval(timer);
+                dismiss_pop();
+            }
+        },50);
+        $confirm.on('click',confirm_pop);
+        $cancel.on('click',cancel_pop);
+        $mask.on('click',cancel_pop);
+        function cancel_pop () {
+            confirmed = false;
+        }
+        function confirm_pop () {
+            confirmed = true;
+        }
+        function dismiss_pop() {
+            $mask.remove();
+            $box.remove();
+        }
+        $window.on('resize',function () {
+            adjust_box_position();
+        });
+
+        function adjust_box_position() {
+            var window_width=$window.width()
+                ,window_height=$window.height()
+                ,box_height =$box.height()
+                ,box_width = $box.width()
+                ,move_x
+                ,move_y
+                ;
+            move_x = (window_width-box_width)/2;
+            move_y = (window_height-box_height)/2 - 20;
+            $box.css({
+                left:move_x,
+                top:move_y
+            });
+            console.log(box_height,box_width,window_height,window_width)
+
+
+        }
+
+        $mask.appendTo($body);
+        $box.appendTo($body);
+        $window.resize();
+        return dfd.promise();
+
+    }
 
 
     $form_add_task.on('submit', on_add_task_from_submit);
     $task_detail_mask.on('click', hide_task_detail);
+    
 
     
     function listen_msg_event() {
@@ -88,6 +192,7 @@
         var index;
         var task_item=$('.task-item');
         task_item.on('dblclick',function () {
+            //鼠标的双击事件
             index=$(this).data('index');
             show_task_detail(index);
         });
@@ -98,6 +203,7 @@
             var index = $this.data('index');
             var item = get(index);
             if(3 == e.which){
+                //监听鼠标右键的单击事件.
                 e.preventDefault();
                 if (item.complete){
                     update_task(index,{complete:false});
@@ -176,7 +282,10 @@
             var $this=$(this);
             var $item = $this.parent().parent();
             var index=$item.data('index');
-            var r =confirm('R U Sure?');
+            pop('R U Sure Delete?')
+                .then(function (r) {
+                    r ? delete_task(index):null;
+                });
             r?delete_task(index):null;
             console.log(index);
 
@@ -224,6 +333,7 @@
 
     }
     function show_msg(msg) {
+        if(!msg)return;//必须要有msg传入,不然通知是没有意义的
         $msg_content.html(msg);
         $alerter.get(0).play();
         $msg.show();
