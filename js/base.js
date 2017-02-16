@@ -33,7 +33,7 @@
         task_list=store.get('task_list')||[];
         if (task_list.length) render_task_list();
         task_remind_check();
-        console.log("initial successful");
+        // console.log("initial successful");
         listen_msg_event();
     }
     function pop(arg) {
@@ -280,10 +280,12 @@
     function listen_task_delete() {
         $task_delete_trigger.on("click",function () {
             var $this=$(this);
+            var r;
             var $item = $this.parent().parent();
             var index=$item.data('index');
             pop('R U Sure Delete?')
                 .then(function (r) {
+                    console.log(r);
                     r ? delete_task(index):null;
                 });
             r?delete_task(index):null;
@@ -358,8 +360,8 @@
         for (var j=0;j<complete_items.length;j++){
             $task =render_task_item(complete_items[j],j);
             if (!$task) continue;
-            console.log("item"+item);
-            console.log("complete_items"+j+":"+complete_items[j]);
+            // console.log("item"+item);
+            // console.log("complete_items"+j+":"+complete_items[j]);
             $task_list.append($task);
             $task.addClass('completed');
 
