@@ -138,7 +138,7 @@
                 left:move_x,
                 top:move_y
             });
-            console.log(box_height,box_width,window_height,window_width)
+            // console.log(box_height,box_width,window_height,window_width)
 
 
         }
@@ -285,11 +285,11 @@
             var index=$item.data('index');
             pop('R U Sure Delete?')
                 .then(function (r) {
-                    console.log(r);
+                    // console.log(r);
                     r ? delete_task(index):null;
                 });
             r?delete_task(index):null;
-            console.log(index);
+            // console.log(index);
 
         });
     }
